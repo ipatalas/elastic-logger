@@ -6,12 +6,12 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
-
   "keywords": [],
   "author": "",
   "license": "ISC",
   "dependencies": {
     "bunyan": "^1.8.12",
-    "bunyan-elasticsearch": "^1.0.1"
+    "bunyan-elasticsearch": "^1.0.1",
+    "bunyan-logstash-tcp": "^1.0.0"
   }
 }

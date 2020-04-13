@@ -1,27 +1,27 @@
 function createLogger(project, appName) {
+    const FILEBEAT_HOST = process.env.FILEBEAT_HOST;
+    const FILEBEAT_PORT = process.env.FILEBEAT_PORT;
     const ELASTICSEARCH_HOST = process.env.ELASTICSEARCH_HOST;
     const ELASTICSEARCH_AUTH = process.env.ELASTICSEARCH_AUTH;
 
-    if (!ELASTICSEARCH_HOST) {
-        console.error('Missing ELASTICSEARCH_HOST environment variable');
+    const useFileBeat = !!process.env.FILEBEAT_HOST;
+
+    if (!FILEBEAT_HOST && !ELASTICSEARCH_HOST) {
+        console.error('Missing FILEBEAT_HOST/ELASTICSEARCH_HOST environment variable');
         process.exit(1);
     }
 
     var bunyan = require('bunyan');
-    var Elasticsearch = require('bunyan-elasticsearch');
 
-    var esStream = new Elasticsearch({
-        host: ELASTICSEARCH_HOST,
-        httpAuth: ELASTICSEARCH_AUTH || ''
-    });
-
-    esStream.on('error', err => console.error('Elasticsearch Stream Error:', err.stack));
+    const stream = useFileBeat
+        ? createFileBeatStream(FILEBEAT_HOST, FILEBEAT_PORT)
+        : createElasticSearchStream(ELASTICSEARCH_HOST, ELASTICSEARCH_AUTH);
 
     const logger = bunyan.createLogger({
         name: project,
         streams: [
             { stream: process.stdout },
-            { stream: esStream }
+            stream
         ],
         serializers: bunyan.stdSerializers
     });
@@ -36,3 +36,27 @@ function createLogger(project, appName) {
 }
 
 module.exports = createLogger;
+
+function createElasticSearchStream(host, auth) {
+    var Elasticsearch = require('bunyan-elasticsearch');
+
+    var esStream = new Elasticsearch({
+        host: host,
+        httpAuth: auth || ''
+    });
+
+    esStream.on('error', err => console.error('Elasticsearch Stream Error:', err.stack));
+
+    return {
+        stream: esStream
+    };
+}
+
+function createFileBeatStream(host, port) {
+    const bunyantcp = require('bunyan-logstash-tcp');
+
+    return {
+        type: 'raw',
+        stream: bunyantcp.createStream({ host, port })
+    };
+}
