@@ -3,7 +3,7 @@
 That's a simple wrapper over bunyan logger which makes it easier to log everything from apps I run at home. That's mainly to remove all boilerplate around logging and leave just pure logic:
 
 ```JS
-const log = require('elastic-logger')('system-name', 'sub-system-name');
+const log = require('elastic-logger')('system-name', 'sub-system-name' /* optional */);
 
 log.info('Test log entry');
 ```
